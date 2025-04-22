@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Assistant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .chat-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .main-chat {
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            height: 100%;
+        }
+
+        .sidebar {
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            height: 600px;
+            overflow-y: auto;
+        }
+
+        #recommended-products {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .chat-log {
+            height: 450px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 18px;
+            border-radius: 12px;
+            max-width: 80%;
+        }
+
+        .user-message {
+            background: #7952b3;
+            color: white;
+            margin-left: auto;
+        }
+
+        .bot-message {
+            background: #f0f2f5;
+            color: #212529;
+        }
+
+        .input-group {
+            margin-top: 20px;
+        }
+
+        .form-control {
+            border-radius: 25px 0 0 25px;
+            padding: 12px 20px;
+            border: 2px solid #7952b3;
+        }
+
+        .form-control:focus {
+            box-shadow: none;
+            border-color: #7952b3;
+        }
+
+        .btn-primary {
+            background-color: #7952b3;
+            border-color: #7952b3;
+            border-radius: 0 25px 25px 0;
+            padding: 12px 25px;
+        }
+
+        .btn-primary:hover {
+            background-color: #643c9b;
+            border-color: #643c9b;
+        }
+
+        .section-title {
+            color: #2c3e50;
+            font-weight: 600;
+            margin: 20px 0 15px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #7952b3;
+        }
+
+        .cart-count {
+            background: white;
+            color: #7952b3;
+            border-radius: 50%;
+            padding: 2px 6px;
+            margin-left: 8px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .quick-action-btn {
+            background: #f0f2f5;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 15px;
+            color: #2c3e50;
+            cursor: pointer;
+            transition: all 0.2s;   
+        }
+
+        .quick-action-btn:hover {
+            background: #7952b3;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="main-chat">
+            <h2 class="text-center mb-4">Shopping Assistant</h2>
+            
+            <div class="quick-actions">
+                <button class="quick-action-btn" data-endpoint="/chat">Nutrition Value</button>
+                <button class="quick-action-btn" data-endpoint="/recipe">Recipe</button>
+            </div>
+
+            <div id="chat-log" class="chat-log">
+                <!-- Chat messages will appear here -->
+            </div>
+
+            <form id="chat-form">
+                <div class="input-group">
+                    <input type="text" id="user-prompt" class="form-control" 
+                           placeholder="Ask about products, deals, or shopping help..." required>
+                    <button class="btn btn-primary" type="submit">Send</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Initialize marked
+        marked.setOptions({
+            breaks: true,
+            gfm: true,
+            headerIds: false
+        });
+
+        const chatLog = document.getElementById('chat-log');
+        const chatForm = document.getElementById('chat-form');
+        const userPromptInput = document.getElementById('user-prompt');
+        let currentEndpoint = '/chat'; // Default endpoint
+
+        function renderMarkdown(content) {
+            return marked.parse(content);
+        }
+
+        function appendMessage(role, content) {
+            const message = document.createElement('div');
+            message.className = `message ${role}-message markdown-content`;
+            message.innerHTML = role === 'user' ? content : renderMarkdown(content);
+            chatLog.appendChild(message);
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+        // Quick action buttons to change endpoint
+        document.querySelectorAll('.quick-action-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                currentEndpoint = button.getAttribute('data-endpoint');
+                document.querySelectorAll('.quick-action-btn').forEach(btn => {
+                    btn.style.background = '#f0f2f5';
+                    btn.style.color = '#2c3e50';
+                });
+                button.style.background = '#7952b3';
+                button.style.color = 'white';
+            });
+        });
+
+        chatForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const userPrompt = userPromptInput.value;
+            appendMessage('user', userPrompt);
+            userPromptInput.value = '';
+
+            try {
+                const response = await fetch(`http://127.0.0.1:5000${currentEndpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ user_prompt: userPrompt })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    appendMessage('bot', data.main_response);
+                    if (data.recommended_products) {
+                        updateRecommendedProducts(data.recommended_products);
+                    }
+                } else {
+                    appendMessage('bot', '**Error:** Unable to fetch response from the server.');
+                }
+            } catch (error) {
+                appendMessage('bot', '**Error:** Something went wrong.');
+            }
+        });
+    </script>
+</body>
+</html>
