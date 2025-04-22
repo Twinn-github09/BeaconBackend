@@ -7,7 +7,7 @@ asyncio
 datetime
 secure-smtplib
 pymongo
-base64
+email
 langchain
 langchain-google-genai
 langchain-scrapegraph
