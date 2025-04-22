@@ -1,0 +1,17 @@
+flask
+flask-cors
+werkzeug
+python-dotenv
+requests
+asyncio
+datetime
+smtplib
+email
+pymongo
+base64
+langchain
+langchain-google-genai
+langchain-scrapegraph
+langchain-community
+google-generativeai
+groq
