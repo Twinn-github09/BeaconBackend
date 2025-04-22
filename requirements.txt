@@ -6,7 +6,6 @@ requests
 asyncio
 datetime
 secure-smtplib
-email
 pymongo
 base64
 langchain
