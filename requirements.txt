@@ -5,7 +5,7 @@ python-dotenv
 requests
 asyncio
 datetime
-smtplib
+secure-smtplib
 email
 pymongo
 base64
